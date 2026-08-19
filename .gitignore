@@ -1,0 +1,32 @@
+# Gradle / Android
+.gradle/
+build/
+app/build/
+app/schemas/
+local.properties
+.idea/
+*.iml
+.kotlin/
+captures/
+.externalNativeBuild
+
+# Spring Boot / Maven
+target/
+**/target/
+uploads/
+**/uploads/
+.mvn/wrapper/maven-wrapper.jar
+
+# Web / Node
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+.vite/
+**/ .vite/
+
+# IDE / OS
+.vscode/
+*.swp
+*.DS_Store
+Thumbs.db
