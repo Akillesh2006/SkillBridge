@@ -169,4 +169,24 @@ interface ApiService {
     suspend fun updateUserProfile(
         @Body request: com.skillbridge.ai.data.remote.dto.UpdateProfileRequestDto
     ): com.skillbridge.ai.data.remote.dto.ProfileResponseDto
+
+    @GET("ai/mission/active")
+    suspend fun getActiveMission(): com.skillbridge.ai.data.remote.dto.CareerMissionResponse
+
+    @POST("ai/mission/generate")
+    suspend fun generateMission(): com.skillbridge.ai.data.remote.dto.CareerMissionResponse
+
+    @POST("ai/mission/{id}/start")
+    suspend fun startMission(
+        @retrofit2.http.Path("id") id: Long
+    ): com.skillbridge.ai.data.remote.dto.CareerMissionResponse
+
+    @POST("ai/mission/{id}/submit")
+    suspend fun submitMission(
+        @retrofit2.http.Path("id") id: Long,
+        @Body request: com.skillbridge.ai.data.remote.dto.MissionSubmitRequest
+    ): com.skillbridge.ai.data.remote.dto.CareerMissionResponse
+
+    @GET("ai/mission/history")
+    suspend fun getMissionHistory(): List<com.skillbridge.ai.data.remote.dto.CareerMissionResponse>
 }

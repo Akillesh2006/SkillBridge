@@ -31,8 +31,9 @@ data class RoadmapTask(
     val description: String,
     val resourceUrl: String,
     val completed: Boolean,
-    val status: String,
-    val lastAssessmentId: Long? = null
+    val status: String? = null,
+    val lastAssessmentId: Long? = null,
+    val skillName: String? = null
 )
 
 data class RoadmapWeek(

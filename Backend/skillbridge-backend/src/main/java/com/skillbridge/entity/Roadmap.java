@@ -6,7 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "roadmaps")
+@Table(name = "roadmaps", indexes = {
+        @Index(name = "idx_roadmap_user", columnList = "user_id")
+})
 public class Roadmap {
 
     @Id
@@ -88,6 +90,12 @@ public class Roadmap {
     }
 
     public void setTasks(List<RoadmapTask> tasks) {
-        this.tasks = tasks;
+        this.tasks.clear();
+        if (tasks != null) {
+            for (RoadmapTask task : tasks) {
+                task.setRoadmap(this);
+                this.tasks.add(task);
+            }
+        }
     }
 }

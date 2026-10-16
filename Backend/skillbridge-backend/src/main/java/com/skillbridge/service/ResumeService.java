@@ -79,14 +79,29 @@ public class ResumeService {
             throw new IllegalArgumentException("Could not extract text from PDF. The PDF may be scanned/image-based (OCR required).");
         }
 
-        // 7. Send resume text to Gemini
-        System.out.println("SENDING RESUME TO GEMINI...");
-        String aiAnalysis = geminiService.analyzeResume(extractedText);
-        System.out.println("GEMINI ANALYSIS RECEIVED");
+        long startTime = System.currentTimeMillis();
+
+        // 7. Check if identical resume was previously analyzed
+        Resume existingResume = resumeRepository.findByUser(user).orElse(null);
+        String aiAnalysis;
+
+        if (existingResume != null && existingResume.getExtractedText() != null &&
+            existingResume.getExtractedText().trim().equals(extractedText.trim()) &&
+            existingResume.getAiAnalysis() != null && !existingResume.getAiAnalysis().isBlank()) {
+            
+            System.out.println("[PERF] Resume text matches previously analyzed resume. Reusing cached analysis (0 ms Gemini time).");
+            aiAnalysis = existingResume.getAiAnalysis();
+        } else {
+            // Send resume text to Gemini
+            System.out.println("SENDING RESUME TO GEMINI...");
+            long geminiStart = System.currentTimeMillis();
+            aiAnalysis = geminiService.analyzeResume(extractedText);
+            long geminiDuration = System.currentTimeMillis() - geminiStart;
+            System.out.println("[PERF] Gemini resume analysis = " + geminiDuration + " ms");
+        }
 
         // 8. Find existing resume or create new one
-        Resume resume = resumeRepository.findByUser(user)
-                .orElse(new Resume());
+        Resume resume = (existingResume != null) ? existingResume : new Resume();
 
         // 9. Save resume information
         resume.setFileName(fileName);
@@ -100,8 +115,13 @@ public class ResumeService {
         System.out.println("RESUME DATABASE SAVE SUCCESS");
 
         // 11. Extract and save user skills into database
+        long extractStart = System.currentTimeMillis();
         skillExtractionService.extractAndSaveSkills(user, extractedText);
-        System.out.println("SKILLS SAVE SUCCESS");
+        long extractDuration = System.currentTimeMillis() - extractStart;
+        System.out.println("[PERF] Local Skill Extraction & DB Save = " + extractDuration + " ms");
+
+        long totalDuration = System.currentTimeMillis() - startTime;
+        System.out.println("[PERF] Total Resume Processing = " + totalDuration + " ms");
         System.out.println("===========================================");
 
         return savedResume;

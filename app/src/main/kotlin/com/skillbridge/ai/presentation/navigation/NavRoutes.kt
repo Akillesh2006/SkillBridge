@@ -71,4 +71,10 @@ sealed class Screen(val route: String) {
 
     /** Skill mastery check results screen. */
     data object MasteryCheckResult : Screen("mastery_check_result/{assessmentId}")
+
+    /** Daily technical challenge screen. */
+    data object DailyChallenge : Screen("daily_challenge")
+
+    /** Real-world AI career mission simulator screen. */
+    data object CareerMission : Screen("career_mission")
 }

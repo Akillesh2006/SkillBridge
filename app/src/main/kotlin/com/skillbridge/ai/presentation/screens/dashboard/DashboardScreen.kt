@@ -40,6 +40,11 @@ import com.skillbridge.ai.presentation.navigation.Screen
 import com.skillbridge.ai.presentation.theme.*
 import com.skillbridge.ai.presentation.viewmodel.DashboardViewModel
 
+import androidx.compose.runtime.DisposableEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
@@ -47,6 +52,19 @@ fun DashboardScreen(
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.loadDashboardData()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
 
     Scaffold(
         containerColor = DeepNavy,
@@ -507,9 +525,82 @@ fun DashboardScreen(
                             Spacer(modifier = Modifier.height(16.dp))
                             SkillBridgeOutlinedButton(
                                 text = "Start Challenge",
-                                onClick = { navController.navigate(Screen.Progress.route) },
+                                onClick = { navController.navigate(Screen.DailyChallenge.route) },
                                 modifier = Modifier.fillMaxWidth()
                             )
+                        }
+                    }
+
+                    // ── AI Career Mission Simulator ─────────────────────────────
+                    item {
+                        SkillBridgeSectionHeader(title = "AI Career Mission")
+                        val isMissionDone = data.isCareerMissionCompleted
+                        val missionScore = data.careerMissionScore
+
+                        GlassCard(glowColor = if (isMissionDone) NeonGreen else NeonViolet) {
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "🚀 REAL-WORLD WORKPLACE SIMULATION",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                        color = if (isMissionDone) NeonGreen else NeonViolet
+                                    )
+                                    Surface(
+                                        shape = RoundedCornerShape(6.dp),
+                                        color = if (isMissionDone) NeonGreen.copy(alpha = 0.12f) else NeonViolet.copy(alpha = 0.12f),
+                                        modifier = Modifier.border(
+                                            1.dp,
+                                            if (isMissionDone) NeonGreen.copy(alpha = 0.25f) else NeonViolet.copy(alpha = 0.25f),
+                                            RoundedCornerShape(6.dp)
+                                        )
+                                    ) {
+                                        Text(
+                                            text = if (isMissionDone) "Score: $missionScore/100" else "${data.targetJob}",
+                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                            color = if (isMissionDone) NeonGreen else NeonCyan,
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(10.dp))
+                                Text(
+                                    text = data.careerMissionTitle ?: "Prove your skills in a real-world ${data.targetJob} job scenario.",
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = TextPrimary
+                                )
+
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = if (isMissionDone) {
+                                        "Mission evaluated by AI Hiring Manager. View breakdown, technical strengths, and next recommended simulation."
+                                    } else {
+                                        data.careerMissionScenario ?: "Simulate solving production-level engineering challenges with AI mentor evaluation."
+                                    },
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = TextMuted,
+                                    maxLines = 3
+                                )
+
+                                Spacer(modifier = Modifier.height(16.dp))
+                                if (isMissionDone) {
+                                    SkillBridgePrimaryButton(
+                                        text = "VIEW EVALUATION & NEXT MISSION →",
+                                        onClick = { navController.navigate(Screen.CareerMission.route) },
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                } else {
+                                    SkillBridgePrimaryButton(
+                                        text = "START MISSION →",
+                                        onClick = { navController.navigate(Screen.CareerMission.route) },
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
+                            }
                         }
                     }
 

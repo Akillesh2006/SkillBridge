@@ -1,5 +1,6 @@
 package com.skillbridge.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skillbridge.entity.*;
 import com.skillbridge.repository.*;
 import com.skillbridge.service.GeminiService;
@@ -23,6 +24,7 @@ public class CopilotController {
     private final MockInterviewRepository mockInterviewRepository;
     private final DailyChallengeRepository dailyChallengeRepository;
     private final SkillAssessmentRepository skillAssessmentRepository;
+    private final CareerMissionRepository careerMissionRepository;
     private final GeminiService geminiService;
 
     public CopilotController(
@@ -34,6 +36,7 @@ public class CopilotController {
             MockInterviewRepository mockInterviewRepository,
             DailyChallengeRepository dailyChallengeRepository,
             SkillAssessmentRepository skillAssessmentRepository,
+            CareerMissionRepository careerMissionRepository,
             GeminiService geminiService) {
         this.userRepository = userRepository;
         this.userSkillRepository = userSkillRepository;
@@ -43,6 +46,7 @@ public class CopilotController {
         this.mockInterviewRepository = mockInterviewRepository;
         this.dailyChallengeRepository = dailyChallengeRepository;
         this.skillAssessmentRepository = skillAssessmentRepository;
+        this.careerMissionRepository = careerMissionRepository;
         this.geminiService = geminiService;
     }
 
@@ -299,34 +303,63 @@ public class CopilotController {
             resumeMatch = 65; // fallback
         }
 
+        List<CareerMission> completedMissions = careerMissionRepository.findByUserOrderByCreatedAtDesc(user).stream().filter(CareerMission::isCompleted).toList();
+        int missionScore = 0;
+        if (!completedMissions.isEmpty()) {
+            missionScore = (int) completedMissions.stream()
+                    .mapToInt(m -> m.getScore() != null ? m.getScore() : 0)
+                    .average().orElse(0.0);
+        }
+
         List<SkillAssessment> masteryList = skillAssessmentRepository.findByUserAndAssessmentTypeOrderByCreatedDateDesc(user, "MASTERY");
         int masteryScore = 0;
         int overall = 0;
+        int count = 5;
+        int sum = resumeMatch + verifiedScore + roadmapProgress + interviewScore + challengeScore;
         if (!masteryList.isEmpty()) {
             masteryScore = (int) masteryList.stream()
                     .mapToInt(SkillAssessment::getScore)
                     .average().orElse(0.0);
-            overall = (resumeMatch + verifiedScore + roadmapProgress + interviewScore + challengeScore + masteryScore) / 6;
-        } else {
-            overall = (resumeMatch + verifiedScore + roadmapProgress + interviewScore + challengeScore) / 5;
+            sum += masteryScore;
+            count++;
         }
+        if (!completedMissions.isEmpty()) {
+            sum += missionScore;
+            count++;
+        }
+        overall = sum / count;
         if (overall == 0) overall = 50;
 
-        // Build summary for Gemini
+        // Build deterministic and fast career readiness report from actual scores (< 1 ms)
         String role = user.getTargetJob() != null ? user.getTargetJob() : (!roadmaps.isEmpty() ? roadmaps.get(0).getRoleName() : "Software Developer");
-        StringBuilder summary = new StringBuilder();
-        summary.append("Target Role: ").append(role).append("\n");
-        if (user.getTargetCompany() != null) {
-            summary.append("Target Company: ").append(user.getTargetCompany()).append("\n");
-        }
-        summary.append("Resume Match: ").append(resumeMatch).append("%\n");
-        summary.append("Average Verification Score: ").append(verifiedScore).append("%\n");
-        summary.append("Roadmap Progress: ").append(roadmapProgress).append("%\n");
-        summary.append("Mock Interview Score: ").append(interviewScore).append("%\n");
-        summary.append("Daily Challenge Performance: ").append(challengeScore).append("%\n");
-        summary.append("AI Skill Mastery Score: ").append(masteryScore).append("%\n");
+        
+        List<String> strengths = new ArrayList<>();
+        List<String> priorityGaps = new ArrayList<>();
+        if (resumeMatch >= 70) strengths.add("Strong profile alignment for " + role);
+        if (verifiedScore >= 70) strengths.add("Demonstrated technical competency in verified skills (" + verifiedScore + "%)");
+        if (roadmapProgress >= 40) strengths.add("Active learning progression across curriculum (" + roadmapProgress + "%)");
+        if (missionScore >= 75) strengths.add("Proven practical implementation in project missions (" + missionScore + "%)");
+        if (strengths.isEmpty()) strengths.add("Foundational programming proficiency");
 
-        String geminiJson = geminiService.generateCareerReadinessReport(role, summary.toString());
+        if (roadmapProgress < 60) priorityGaps.add("Complete remaining roadmap modules and tasks");
+        if (verifiedScore < 70) priorityGaps.add("Verify core technical skills through assessments");
+        if (missionScore < 70) priorityGaps.add("Build and submit GitHub project mission");
+        if (priorityGaps.isEmpty()) priorityGaps.add("Deep dive into advanced system design and performance profiling");
+
+        String recommendation = "Focus on completing pending roadmap tasks and verifying remaining target skills. Your current project and verification readiness stands at " + overall + "%.";
+
+        Map<String, Object> reportMap = new LinkedHashMap<>();
+        reportMap.put("overallReadiness", overall);
+        reportMap.put("strengths", strengths);
+        reportMap.put("priorityGaps", priorityGaps);
+        reportMap.put("recommendation", recommendation);
+
+        String reportJson;
+        try {
+            reportJson = new ObjectMapper().writeValueAsString(reportMap);
+        } catch (Exception e) {
+            reportJson = "{\"overallReadiness\":" + overall + ",\"strengths\":[\"Technical fundamentals\"],\"priorityGaps\":[\"Hands-on project development\"],\"recommendation\":\"" + recommendation + "\"}";
+        }
 
         Map<String, Object> response = new HashMap<>();
         response.put("technicalScore", techScore);
@@ -336,8 +369,9 @@ public class CopilotController {
         response.put("interviewScore", interviewScore);
         response.put("challengeScore", challengeScore);
         response.put("masteryScore", masteryScore);
+        response.put("missionScore", missionScore);
         response.put("overallScore", overall);
-        response.put("reportJson", geminiJson);
+        response.put("reportJson", reportJson);
 
         return ResponseEntity.ok(response);
     }

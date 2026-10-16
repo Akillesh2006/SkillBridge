@@ -3,7 +3,10 @@ package com.skillbridge.entity;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "roadmap_tasks")
+@Table(name = "roadmap_tasks", indexes = {
+        @Index(name = "idx_task_roadmap_id", columnList = "roadmap_id"),
+        @Index(name = "idx_task_week", columnList = "roadmap_id, weekNumber")
+})
 public class RoadmapTask {
 
     @Id

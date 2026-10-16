@@ -51,7 +51,7 @@ object NetworkModule {
             return@Interceptor chain.proceed(originalRequest)
         }
 
-        val token = kotlinx.coroutines.runBlocking {
+        val token = tokenManager.getCachedToken() ?: kotlinx.coroutines.runBlocking {
             tokenManager.getToken().first()
         }
 

@@ -32,13 +32,13 @@ android {
                 "proguard-rules.pro"
             )
             // Production Cloud Railway Backend URL (Update this with your deployed Railway domain)
-            buildConfigField("String", "BASE_URL", "\"https://skillbridge-production-8a24.up.railway.app/\"")
+            buildConfigField("String", "BASE_URL", "\"http://192.168.137.197:8080/\"")
         }
         debug {
             isDebuggable = true
             applicationIdSuffix = ".debug"
             // Local Laptop / Development Backend URL
-            buildConfigField("String", "BASE_URL", "\"https://skillbridge-production-8a24.up.railway.app/\"")
+            buildConfigField("String", "BASE_URL", "\"http://192.168.137.197:8080/\"")
         }
     }
 

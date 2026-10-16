@@ -12,9 +12,12 @@ class ProfileRepositoryImpl @Inject constructor(
     private val apiService: ApiService
 ) : ProfileRepository {
 
+    @Volatile
     private var cachedProfile: UserProfile? = null
 
     override suspend fun getUserProfile(): UserProfile {
+        cachedProfile?.let { return it }
+
         val dto = apiService.getUserProfile()
         val domainModel = UserProfile(
             username = dto.fullName,

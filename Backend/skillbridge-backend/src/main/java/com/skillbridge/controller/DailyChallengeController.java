@@ -131,29 +131,44 @@ public class DailyChallengeController {
         String studentAnswerText = request.getAnswer() != null ? request.getAnswer() : "";
         challenge.setStudentAnswer(studentAnswerText);
 
-        // Grade via Gemini
-        String resultJson = geminiService.evaluateChallengeAnswer(
-                challenge.getQuestionText(),
-                challenge.getChallengeType(),
-                challenge.getCorrectAnswer(),
-                studentAnswerText
-        );
-
+        long startTime = System.currentTimeMillis();
         boolean correct = false;
-        String improvement = "Review core language syntax guides.";
+        String improvement = "Review core language syntax and practice regular problem solving.";
 
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode root = mapper.readTree(resultJson);
-            correct = root.has("correct") && root.get("correct").asBoolean();
-            if (root.has("explanation")) {
-                challenge.setExplanation(root.get("explanation").asText());
-            }
-            improvement = root.has("improvementSuggestion") ? root.get("improvementSuggestion").asText() : improvement;
-        } catch (Exception e) {
-            System.err.println("Jackson evaluation daily challenge parse fallback: " + e.getMessage());
-            // Fallback check
+        // For MCQ challenges with known correct answers, evaluate deterministically in < 1ms
+        if ("MCQ".equalsIgnoreCase(challenge.getChallengeType())) {
             correct = studentAnswerText.trim().equalsIgnoreCase(challenge.getCorrectAnswer().trim());
+            if (!correct) {
+                improvement = "Incorrect selection. The correct answer is: " + challenge.getCorrectAnswer() + ". " + challenge.getExplanation();
+            } else {
+                improvement = "Excellent work! Concept verified successfully.";
+            }
+            long duration = System.currentTimeMillis() - startTime;
+            System.out.println("[PERF] Deterministic MCQ Challenge grading = " + duration + " ms");
+        } else {
+            // Grade non-MCQ / open code submissions via Gemini
+            long geminiStart = System.currentTimeMillis();
+            String resultJson = geminiService.evaluateChallengeAnswer(
+                    challenge.getQuestionText(),
+                    challenge.getChallengeType(),
+                    challenge.getCorrectAnswer(),
+                    studentAnswerText
+            );
+            long geminiDuration = System.currentTimeMillis() - geminiStart;
+            System.out.println("[PERF] Gemini Open Challenge grading = " + geminiDuration + " ms");
+
+            try {
+                ObjectMapper mapper = new ObjectMapper();
+                JsonNode root = mapper.readTree(resultJson);
+                correct = root.has("correct") && root.get("correct").asBoolean();
+                if (root.has("explanation")) {
+                    challenge.setExplanation(root.get("explanation").asText());
+                }
+                improvement = root.has("improvementSuggestion") ? root.get("improvementSuggestion").asText() : improvement;
+            } catch (Exception e) {
+                System.err.println("Jackson evaluation daily challenge parse fallback: " + e.getMessage());
+                correct = studentAnswerText.trim().equalsIgnoreCase(challenge.getCorrectAnswer().trim());
+            }
         }
 
         challenge.setCorrect(correct);

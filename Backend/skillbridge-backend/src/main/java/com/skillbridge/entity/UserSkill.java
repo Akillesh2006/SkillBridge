@@ -3,7 +3,10 @@ package com.skillbridge.entity;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "user_skills")
+@Table(name = "user_skills", indexes = {
+        @Index(name = "idx_skill_user", columnList = "user_id"),
+        @Index(name = "idx_skill_user_name", columnList = "user_id, skillName")
+})
 public class UserSkill {
 
     @Id

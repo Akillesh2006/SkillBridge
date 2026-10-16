@@ -10,7 +10,6 @@ import kotlinx.coroutines.delay
 class ProgressRepositoryImpl @Inject constructor() : ProgressRepository {
 
     override suspend fun getProgressMetrics(): ProgressMetrics {
-        delay(800)
         return ProgressMetrics(
             overallCompletion = 68,
             streakDays = 12,

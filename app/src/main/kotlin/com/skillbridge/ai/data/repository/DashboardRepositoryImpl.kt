@@ -2,23 +2,31 @@ package com.skillbridge.ai.data.repository
 
 import com.skillbridge.ai.domain.model.ActivityItem
 import com.skillbridge.ai.domain.repository.DashboardRepository
+import com.skillbridge.ai.domain.repository.RoadmapRepository
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlinx.coroutines.delay
 
 @Singleton
-class DashboardRepositoryImpl @Inject constructor() : DashboardRepository {
+class DashboardRepositoryImpl @Inject constructor(
+    private val roadmapRepository: RoadmapRepository
+) : DashboardRepository {
 
     override suspend fun getWelcomeMessage(username: String): String {
         return "Welcome back, $username!"
     }
 
     override suspend fun getProgressPercentage(): Int {
-        return 68
+        return try {
+            val weeks = roadmapRepository.getWeeklyRoadmap()
+            val allTasks = weeks.flatMap { it.tasks }
+            if (allTasks.isEmpty()) 0
+            else (allTasks.count { it.completed } * 100) / allTasks.size
+        } catch (e: Exception) {
+            50
+        }
     }
 
     override suspend fun getRecentActivities(): List<ActivityItem> {
-        delay(500)
         return listOf(
             ActivityItem(
                 id = "1",

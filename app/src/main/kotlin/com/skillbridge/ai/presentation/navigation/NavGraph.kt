@@ -28,6 +28,7 @@ import com.skillbridge.ai.presentation.screens.skilltest.SkillTestScreen
 import com.skillbridge.ai.presentation.screens.skilltest.SkillTestResultScreen
 import com.skillbridge.ai.presentation.screens.skilltest.MockInterviewScreen
 import com.skillbridge.ai.presentation.screens.skilltest.DailyChallengeScreen
+import com.skillbridge.ai.presentation.screens.mission.CareerMissionScreen
 import com.skillbridge.ai.presentation.screens.analytics.ReadinessReportScreen
 import com.skillbridge.ai.presentation.screens.mastery.MasteryCheckScreen
 import com.skillbridge.ai.presentation.screens.mastery.MasteryCheckResultScreen
@@ -156,8 +157,12 @@ fun SkillBridgeNavGraph(
             MockInterviewScreen(navController = navController)
         }
 
-        composable("daily_challenge") {
+        composable(route = Screen.DailyChallenge.route) {
             DailyChallengeScreen(navController = navController)
+        }
+
+        composable(route = Screen.CareerMission.route) {
+            CareerMissionScreen(navController = navController)
         }
 
         composable("career_readiness_report") {

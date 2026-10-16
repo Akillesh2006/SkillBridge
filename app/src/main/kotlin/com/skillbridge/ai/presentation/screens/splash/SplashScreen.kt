@@ -59,14 +59,14 @@ fun SplashScreen(navController: NavController) {
         // Run scale and fade in parallel
         alpha.animateTo(
             targetValue = 1f,
-            animationSpec = tween(durationMillis = 1000)
+            animationSpec = tween(durationMillis = 500)
         )
         scale.animateTo(
             targetValue = 1f,
-            animationSpec = tween(durationMillis = 800)
+            animationSpec = tween(durationMillis = 450)
         )
-        // Wait remainder of 2 seconds total splash duration
-        delay(1000)
+        // Short pause for seamless transition
+        delay(200)
         // Navigate and clear splash from backstack
         navController.navigate(Screen.Login.route) {
             popUpTo(Screen.Splash.route) { inclusive = true }

@@ -105,4 +105,10 @@ abstract class RepositoryModule {
     abstract fun bindChallengeRepository(
         impl: com.skillbridge.ai.data.repository.ChallengeRepositoryImpl
     ): com.skillbridge.ai.domain.repository.ChallengeRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindCareerMissionRepository(
+        impl: com.skillbridge.ai.data.repository.CareerMissionRepositoryImpl
+    ): com.skillbridge.ai.domain.repository.CareerMissionRepository
 }

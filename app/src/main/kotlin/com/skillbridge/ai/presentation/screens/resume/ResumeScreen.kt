@@ -1,7 +1,7 @@
 package com.skillbridge.ai.presentation.screens.resume
 
 import android.net.Uri
-import android.provider.OpenableColumns
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CloudUpload
 import androidx.compose.material.icons.rounded.Description
+import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -32,7 +33,6 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.skillbridge.ai.core.common.UiState
-import com.skillbridge.ai.presentation.components.LoadingScreenComponent
 import com.skillbridge.ai.presentation.components.SkillBridgePrimaryButton
 import com.skillbridge.ai.presentation.components.SkillBridgeTopAppBar
 import com.skillbridge.ai.presentation.navigation.Screen
@@ -45,58 +45,20 @@ fun ResumeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
-    var selectedFileBytes by remember { mutableStateOf<ByteArray?>(null) }
-    var localError by remember { mutableStateOf<String?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
 
     val pdfPickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
+        contract = ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
         if (uri != null) {
-            localError = null
-            val fileName = getFileNameFromUri(context, uri) ?: "resume.pdf"
-            val mimeType = context.contentResolver.getType(uri) ?: "application/pdf"
-
-            android.util.Log.d("ResumeUpload", "========== AUDIT: SELECTED PDF FILE ==========")
-            android.util.Log.d("ResumeUpload", "Selected URI: $uri")
-            android.util.Log.d("ResumeUpload", "File Name: $fileName")
-            android.util.Log.d("ResumeUpload", "MIME Type: $mimeType")
-
-            val isPdfExt = fileName.lowercase().endsWith(".pdf")
-            val isPdfMime = mimeType.equals("application/pdf", ignoreCase = true) || mimeType.contains("pdf", ignoreCase = true)
-
-            if (!isPdfExt && !isPdfMime) {
-                localError = "Invalid file type. Only PDF files (.pdf) are allowed."
-                android.util.Log.e("ResumeUpload", "Rejected non-PDF file: $fileName ($mimeType)")
-                return@rememberLauncherForActivityResult
-            }
-
-            try {
-                val bytes = context.contentResolver
-                    .openInputStream(uri)
-                    ?.use { it.readBytes() }
-
-                if (bytes != null && bytes.isNotEmpty()) {
-                    android.util.Log.d("ResumeUpload", "File Size: ${bytes.size} bytes")
-                    android.util.Log.d("ResumeUpload", "Number of bytes actually read: ${bytes.size}")
-                    android.util.Log.d("ResumeUpload", "Upload request filename: ${fileName.replace(" ", "_")}")
-                    android.util.Log.d("ResumeUpload", "=============================================")
-
-                    selectedFileBytes = bytes
-                    viewModel.selectFile(fileName, bytes)
-                } else {
-                    localError = "Selected PDF file is empty (0 bytes)."
-                    android.util.Log.e("ResumeUpload", "Failed: read 0 bytes from URI $uri")
-                }
-            } catch (e: Exception) {
-                localError = "Failed to read PDF file: ${e.message}"
-                android.util.Log.e("ResumeUpload", "Error reading PDF stream", e)
-            }
+            viewModel.processSelectedUri(context, uri)
+        } else {
+            viewModel.onPickerCancelled()
         }
     }
 
     val data = (uiState as? UiState.Success)?.data
-    val stateErrorMessage = (uiState as? UiState.Error)?.message ?: data?.errorMessage ?: localError
+    val stateErrorMessage = (uiState as? UiState.Error)?.message ?: data?.errorMessage
 
     if (data?.isAnalyzing == true) {
         FullScreenAnalysisLoading(
@@ -153,17 +115,77 @@ fun ResumeScreen(
                             modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text(
-                                text = stateErrorMessage,
-                                color = MaterialTheme.colorScheme.onErrorContainer,
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.padding(12.dp),
-                                textAlign = TextAlign.Center
-                            )
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = stateErrorMessage,
+                                    color = MaterialTheme.colorScheme.onErrorContainer,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    textAlign = TextAlign.Center
+                                )
+                                if (data?.selectedFileName != null && data.selectedFileBytes != null) {
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    OutlinedButton(
+                                        onClick = {
+                                            viewModel.clearError()
+                                            viewModel.startAnalysis {
+                                                navController.navigate(Screen.ResumeResult.route)
+                                            }
+                                        },
+                                        colors = ButtonDefaults.outlinedButtonColors(
+                                            contentColor = MaterialTheme.colorScheme.onErrorContainer
+                                        )
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Rounded.Refresh,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text("Retry Analysis")
+                                    }
+                                }
+                            }
                         }
                     }
 
-                    if (data?.selectedFileName != null) {
+                    if (data?.isPreparing == true) {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 12.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(20.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(28.dp),
+                                    strokeWidth = 3.dp,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Column {
+                                    Text(
+                                        text = data.preparationStatus ?: "Preparing resume...",
+                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        text = "Reading file from storage provider...",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+                    } else if (data?.selectedFileName != null) {
                         FileCard(
                             fileName = data.selectedFileName,
                             fileSize = data.fileSize
@@ -174,21 +196,28 @@ fun ResumeScreen(
                         SkillBridgePrimaryButton(
                             text = "Analyze Resume",
                             onClick = {
-                                localError = null
                                 viewModel.startAnalysis {
                                     navController.navigate(Screen.ResumeResult.route)
                                 }
                             },
                             modifier = Modifier.fillMaxWidth()
                         )
-                        
+
                         Spacer(modifier = Modifier.height(12.dp))
-                        TextButton(onClick = { pdfPickerLauncher.launch("application/pdf") }) {
+                        TextButton(
+                            onClick = {
+                                Log.d("RESUME", "[RESUME] Picker launched")
+                                pdfPickerLauncher.launch(arrayOf("application/pdf"))
+                            }
+                        ) {
                             Text("Select Different File")
                         }
                     } else {
                         Button(
-                            onClick = { pdfPickerLauncher.launch("application/pdf") },
+                            onClick = {
+                                Log.d("RESUME", "[RESUME] Picker launched")
+                                pdfPickerLauncher.launch(arrayOf("application/pdf"))
+                            },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(160.dp),
@@ -214,7 +243,7 @@ fun ResumeScreen(
                                     style = MaterialTheme.typography.titleMedium
                                 )
                                 Text(
-                                    text = "Only PDF files supported",
+                                    text = "Google Drive, Files, Downloads (.pdf)",
                                     style = MaterialTheme.typography.bodySmall
                                 )
                             }
@@ -338,29 +367,4 @@ fun FullScreenAnalysisLoading(stage: String, progress: Float) {
             }
         }
     }
-}
-
-private fun getFileNameFromUri(context: android.content.Context, uri: Uri): String? {
-    var result: String? = null
-    if (uri.scheme == "content") {
-        val cursor = context.contentResolver.query(uri, null, null, null, null)
-        try {
-            if (cursor != null && cursor.moveToFirst()) {
-                val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                if (index != -1) {
-                    result = cursor.getString(index)
-                }
-            }
-        } finally {
-            cursor?.close()
-        }
-    }
-    if (result == null) {
-        result = uri.path
-        val cut = result?.lastIndexOf('/')
-        if (cut != null && cut != -1) {
-            result = result?.substring(cut + 1)
-        }
-    }
-    return result
 }

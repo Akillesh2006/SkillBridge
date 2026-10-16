@@ -77,7 +77,7 @@ public class GeminiService {
         String prompt = """
                 You are the AI career path and curriculum engine for SkillBridge.
 
-                Generate a personalized learning roadmap tailored for a candidate aiming for the job role: %s.
+                Generate a comprehensive, personalized learning roadmap tailored for a candidate aiming for the job role: %s.
 
                 Currently Mastered Skills:
                 %s
@@ -89,23 +89,28 @@ public class GeminiService {
                 %s
 
                 INSTRUCTIONS:
-                - Focus strictly on closing the target skill gaps step-by-step.
-                - Do NOT repeat skills the candidate already knows well.
-                - Provide 4 to 6 weekly modules.
+                - Create a structured progressive curriculum consisting of 4 distinct weekly modules (e.g. Module 1: Core Fundamentals, Module 2: Advanced Concepts & UI/Frameworks, Module 3: REST APIs & Data Persistence, Module 4: Testing & Capstone Project).
+                - Heavily prioritize the candidate's actual skill gaps and missing skills.
+                - Do NOT repeat beginner concepts if the candidate already mastered them.
+                - Each module must have 2 to 4 concrete actionable tasks.
                 - Return ONLY a single valid JSON object without markdown code blocks matching this schema:
 
                 {
                   "careerPath": "%s",
-                  "totalWeeks": 6,
+                  "totalWeeks": 4,
                   "weeks": [
                     {
                       "week": 1,
-                      "title": "Module Title Here",
-                      "skillName": "Main Skill",
+                      "title": "Module 1 — Core Fundamentals",
+                      "skillName": "Main Skill Focus",
+                      "description": "Comprehensive explanation of what to learn and expected outcome.",
                       "skills": ["Skill 1", "Skill 2"],
-                      "tasks": ["Task 1", "Task 2"],
-                      "description": "Comprehensive explanation of what to learn, practical projects to complete, and expected learning outcome.",
-                      "outcome": "Expected outcome summary",
+                      "tasks": [
+                        "Learn core syntax and fundamentals",
+                        "Implement hands-on practice snippet",
+                        "Build functional utility component"
+                      ],
+                      "estimatedHours": 6,
                       "resourceUrl": "https://developer.android.com"
                     }
                   ]
@@ -543,5 +548,172 @@ public class GeminiService {
             System.err.println("Gemini generateTargetProfile error: " + e.getMessage());
             return "{}";
         }
+    }
+
+    public String generateCareerMission(String targetJob, String userSkills, String skillGaps, String roadmapContext) {
+        String prompt = """
+                You are the AI Career Project Mission Designer for SkillBridge.
+
+                Create a realistic, comprehensive software project assignment that a candidate aiming for the target career '%s' would build and publish to GitHub as a portfolio-grade project to prove their practical skills.
+
+                CANDIDATE CONTEXT:
+                - Target Career: %s
+                - Current Skills: %s
+                - Skill Gaps / Focus Areas: %s
+                - Learning Roadmap Context: %s
+
+                PROJECT MISSION SPECIFICATIONS:
+                - Project MUST directly target '%s' and help close the candidate's skill gaps. For example:
+                  * Android Developer: Build a complete Native Android app with Kotlin, Jetpack Compose, MVVM, Room, Retrofit, Coroutines/Flow, and Unit Tests.
+                  * Backend Developer: Build a production-grade REST API with Java/Spring Boot or Node.js/Python, database persistence, authentication, validation, error handling, Dockerfile, and integration tests.
+                  * Frontend Developer: Build a responsive web app with React/Next.js or Vue, state management, API consumption, component modularity, and testing.
+                  * Data Scientist / Analyst: Build an exploratory data analysis & predictive pipeline with Jupyter/Python, Pandas, Scikit-learn, SQL, and interactive dashboards.
+                - Provide 6 to 10 realistic, concrete project requirements.
+                - Provide clear evaluation criteria (Requirements, Architecture, Code Quality, Technology Usage, Testing, Documentation, Career Relevance).
+
+                Format the response as a valid raw JSON object matching this schema:
+                {
+                  "title": "Build a Task Management Android Application with Offline Sync",
+                  "targetJob": "%s",
+                  "description": "Comprehensive explanation of what the application does and why it is built.",
+                  "scenario": "You are assigned to develop an industry-grade application for %s. The application must feature robust architecture, clean coding standards, proper data persistence, network communication, error handling, and comprehensive documentation in a public GitHub repository.",
+                  "whyThisMission": "Based on your resume, target role and current skill gaps, SkillBridge recommends this project to help prove your practical skills.",
+                  "difficulty": "Intermediate",
+                  "estimatedTime": "3–5 days",
+                  "skillsToDemonstrate": ["Kotlin", "Jetpack Compose", "Room", "Retrofit", "MVVM", "Git/GitHub"],
+                  "requirements": [
+                    "Implement user authentication and session management",
+                    "Complete CRUD operations with responsive UI",
+                    "Local data persistence with offline cache synchronization",
+                    "REST API integration with error handling and retry mechanisms",
+                    "Unidirectional data flow architecture (MVVM / MVI)",
+                    "Defensive error handling and nullable safety",
+                    "Automated unit tests for business logic",
+                    "Professional README.md with architectural diagrams and setup guide"
+                  ],
+                  "evaluationCriteria": [
+                    "Requirements Completion & Feature Implementation",
+                    "Architecture & Clean Code Principles",
+                    "Technology Stack & Framework Best Practices",
+                    "Error Handling & Edge Case Resilience",
+                    "Testing Coverage & Verification Evidence",
+                    "Documentation & Repository Structure",
+                    "Career Relevance"
+                  ]
+                }
+
+                Return ONLY the valid raw JSON object without markdown code blocks or backticks.
+                """.formatted(
+                targetJob != null ? targetJob : "Software Developer",
+                targetJob != null ? targetJob : "Software Developer",
+                userSkills != null ? userSkills : "Core programming",
+                skillGaps != null ? skillGaps : "Modern frameworks",
+                roadmapContext != null ? roadmapContext : "General path",
+                targetJob != null ? targetJob : "Software Developer",
+                targetJob != null ? targetJob : "Software Developer",
+                targetJob != null ? targetJob : "Software Developer"
+        );
+
+        try {
+            GenerateContentResponse response = client.models.generateContent("gemini-2.5-flash", prompt, null);
+            String text = response.text();
+            if (text != null) {
+                text = text.trim();
+                if (text.startsWith("```json")) text = text.substring(7);
+                else if (text.startsWith("```")) text = text.substring(3);
+                if (text.endsWith("```")) text = text.substring(0, text.length() - 3);
+                return text.trim();
+            }
+            return "{}";
+        } catch (Exception e) {
+            System.err.println("Gemini generateCareerMission error: " + e.getMessage());
+            return "{}";
+        }
+    }
+
+    public String evaluateGitHubProjectMission(String missionSpecJson, String githubProjectSummaryJson) {
+        String prompt = """
+                You are a Principal Software Architect and Senior Technical Evaluator at SkillBridge.
+                You are evaluating a candidate's GitHub repository submitted for an AI Career Project Mission.
+
+                ASSIGNED PROJECT MISSION:
+                %s
+
+                ACCESSIBLE GITHUB REPOSITORY ANALYSIS:
+                %s
+
+                EVALUATION INSTRUCTIONS:
+                - Carefully evaluate the candidate's repository content against the assigned project requirements.
+                - Analyze:
+                  1. Requirements Completion (Did they implement the assigned features?)
+                  2. Architecture (Project structure, modularity, Clean Architecture/MVVM/Layering)
+                  3. Code Quality (Readability, language idiomatic usage, naming, error handling)
+                  4. Technology Usage (Appropriate libraries, dependency configs, build files)
+                  5. Testing (Presence of automated unit/integration tests)
+                  6. Documentation & Git (Quality of README.md, repo cleanliness, commit hygiene)
+                  7. Career Relevance (How well it demonstrates readiness for the target role)
+                - Crucial: Distinguish between "IMPLEMENTED IN CODE", "VERIFIED BY TESTS", "NOT FOUND", and "CANNOT VERIFY". Do not claim runtime verification if only source code exists.
+                - Compute scores from 0 to 100 for overall and all sub-categories.
+
+                Format the response as a valid raw JSON object matching this schema:
+                {
+                  "overallScore": 82,
+                  "requirementsScore": 88,
+                  "architectureScore": 84,
+                  "codeQualityScore": 79,
+                  "technologyScore": 90,
+                  "testingScore": 65,
+                  "documentationScore": 90,
+                  "careerRelevanceScore": 92,
+                  "completedRequirements": [
+                    "User authentication and session management (Implemented in code)",
+                    "Complete CRUD operations with responsive UI (Implemented in code)",
+                    "Local data persistence with Room database (Implemented in code)",
+                    "REST API integration with error handling (Implemented in code)",
+                    "MVVM Architecture and Clean separation (Implemented in code)"
+                  ],
+                  "missingRequirements": [
+                    "Automated unit tests for repository layer (Not found)",
+                    "Search and filter functionality (Cannot verify)"
+                  ],
+                  "strengths": [
+                    "Clean architectural separation between UI, domain models, and data layer",
+                    "Comprehensive README.md with clear setup steps and project overview",
+                    "Robust REST API integration with error mapping"
+                  ],
+                  "weaknesses": [
+                    "Limited automated test coverage for viewmodels and edge cases",
+                    "Error handling could be made more resilient for unexpected network timeouts"
+                  ],
+                  "recommendations": [
+                    "Add automated unit tests for your data repositories and ViewModel state hoisting.",
+                    "Enhance defensive network timeout error handling.",
+                    "Complete the missing search and filter features to meet full portfolio requirements."
+                  ],
+                  "feedback": "Outstanding project submission! The repository demonstrates strong structural proficiency and matches the required architectural patterns. Strengthening test coverage will make this an exceptional portfolio piece."
+                }
+
+                Return ONLY the valid raw JSON object without markdown code blocks or backticks.
+                """.formatted(missionSpecJson, githubProjectSummaryJson);
+
+        try {
+            GenerateContentResponse response = client.models.generateContent("gemini-2.5-flash", prompt, null);
+            String text = response.text();
+            if (text != null) {
+                text = text.trim();
+                if (text.startsWith("```json")) text = text.substring(7);
+                else if (text.startsWith("```")) text = text.substring(3);
+                if (text.endsWith("```")) text = text.substring(0, text.length() - 3);
+                return text.trim();
+            }
+            return "{}";
+        } catch (Exception e) {
+            System.err.println("Gemini evaluateGitHubProjectMission error: " + e.getMessage());
+            return "{}";
+        }
+    }
+
+    public String evaluateCareerMission(String missionDetailsJson, String studentResponse) {
+        return evaluateGitHubProjectMission(missionDetailsJson, studentResponse);
     }
 }

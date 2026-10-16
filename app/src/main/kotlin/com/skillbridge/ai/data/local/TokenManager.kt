@@ -25,25 +25,36 @@ class TokenManager @Inject constructor(
         private val JWT_TOKEN_KEY = stringPreferencesKey("jwt_token")
     }
 
+    @Volatile
+    private var inMemoryToken: String? = null
+
     fun getToken(): Flow<String?> {
         return context.dataStore.data.map { preferences ->
-            preferences[JWT_TOKEN_KEY]
+            val token = preferences[JWT_TOKEN_KEY]
+            inMemoryToken = token
+            token
         }
     }
 
+    fun getCachedToken(): String? {
+        return inMemoryToken
+    }
+
     suspend fun saveToken(token: String) {
+        inMemoryToken = token
         context.dataStore.edit { preferences ->
             preferences[JWT_TOKEN_KEY] = token
         }
     }
 
     suspend fun deleteToken() {
+        inMemoryToken = null
         context.dataStore.edit { preferences ->
             preferences.remove(JWT_TOKEN_KEY)
         }
     }
 
     suspend fun isTokenAvailable(): Boolean {
-        return getToken().first() != null
+        return inMemoryToken != null || getToken().first() != null
     }
 }

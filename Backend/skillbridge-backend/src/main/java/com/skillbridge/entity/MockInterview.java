@@ -6,7 +6,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "mock_interviews")
+@Table(name = "mock_interviews", indexes = {
+        @Index(name = "idx_mock_user", columnList = "user_id"),
+        @Index(name = "idx_mock_user_created", columnList = "user_id, createdAt")
+})
 public class MockInterview {
 
     @Id

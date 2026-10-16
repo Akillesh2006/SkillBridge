@@ -13,7 +13,10 @@ import kotlinx.coroutines.launch
 
 data class RoadmapUiData(
     val roadmapWeeks: List<RoadmapWeek> = emptyList(),
-    val completionPercentage: Int = 0
+    val completionPercentage: Int = 0,
+    val targetRole: String = "Android Developer",
+    val isGenerating: Boolean = false,
+    val generationStage: String = ""
 )
 
 @HiltViewModel
@@ -31,46 +34,148 @@ class RoadmapViewModel @Inject constructor(
         loadRoadmap()
     }
 
-    fun loadRoadmap() {
+    private fun calculateOverallPercentage(weeks: List<RoadmapWeek>): Int {
+        val allTasks = weeks.flatMap { it.tasks }
+        if (allTasks.isEmpty()) {
+            val completedWeeks = weeks.count { it.completed }
+            return if (weeks.isNotEmpty()) (completedWeeks * 100) / weeks.size else 0
+        }
+        val completedTasks = allTasks.count { it.completed }
+        return (completedTasks * 100) / allTasks.size
+    }
+
+    fun loadRoadmap(forceRegenerate: Boolean = false) {
         viewModelScope.launch {
-            setLoading()
-            try {
-                val targetJob = jobRepository.getSavedTargetJob()?.first ?: "Android Developer"
+            val startTime = System.currentTimeMillis()
+            val targetJob = jobRepository.getSavedTargetJob()?.first ?: "Android Developer"
+
+            if (forceRegenerate) {
+                currentData = currentData.copy(
+                    isGenerating = true,
+                    generationStage = "Building your personalized roadmap...",
+                    targetRole = targetJob
+                )
+                setSuccess(currentData)
+
                 val result = roadmapRepository.generateRoadmap(targetJob)
                 val weeks = result.getOrElse { roadmapRepository.getWeeklyRoadmap() }
-
-                val completedCount = weeks.count { it.completed }
-                val percentage = if (weeks.isNotEmpty()) (completedCount * 100) / weeks.size else 0
+                val percentage = calculateOverallPercentage(weeks)
 
                 currentData = RoadmapUiData(
                     roadmapWeeks = weeks,
-                    completionPercentage = percentage
+                    completionPercentage = percentage,
+                    targetRole = targetJob,
+                    isGenerating = false,
+                    generationStage = ""
                 )
                 setSuccess(currentData)
-            } catch (e: Exception) {
-                setError(e.message ?: "Failed to load roadmap", e)
+            } else {
+                setLoading()
+                try {
+                    val existing = roadmapRepository.getWeeklyRoadmap()
+                    val weeks: List<RoadmapWeek>
+
+                    if (existing.isNotEmpty()) {
+                        weeks = existing
+                    } else {
+                        val result = roadmapRepository.generateRoadmap(targetJob)
+                        weeks = result.getOrElse { emptyList() }
+                    }
+
+                    val percentage = calculateOverallPercentage(weeks)
+
+                    currentData = RoadmapUiData(
+                        roadmapWeeks = weeks,
+                        completionPercentage = percentage,
+                        targetRole = targetJob,
+                        isGenerating = false,
+                        generationStage = ""
+                    )
+                    setSuccess(currentData)
+
+                    val duration = System.currentTimeMillis() - startTime
+                    android.util.Log.d("SkillBridgePerf", "[PERF] Roadmap DB load = $duration ms (Weeks: ${weeks.size})")
+                } catch (e: Exception) {
+                    setError(e.message ?: "Failed to load roadmap", e)
+                }
             }
         }
     }
 
     fun toggleTaskCompleted(taskId: Long, completed: Boolean) {
+        // Optimistic local UI update for instant response
+        val updatedWeeksOptimistic = currentData.roadmapWeeks.map { week ->
+            val updatedTasks = week.tasks.map { task ->
+                if (task.id == taskId) task.copy(completed = completed, status = if (completed) "COMPLETED" else "PENDING") else task
+            }
+            week.copy(
+                tasks = updatedTasks,
+                completed = updatedTasks.isNotEmpty() && updatedTasks.all { it.completed }
+            )
+        }
+
+        currentData = currentData.copy(
+            roadmapWeeks = updatedWeeksOptimistic,
+            completionPercentage = calculateOverallPercentage(updatedWeeksOptimistic)
+        )
+        setSuccess(currentData)
+
         viewModelScope.launch {
             roadmapRepository.toggleTaskCompletion(taskId, completed)
                 .onSuccess { updatedWeeksBackend ->
-                    val completedCount = updatedWeeksBackend.count { it.completed }
-                    val percentage = if (updatedWeeksBackend.isNotEmpty()) (completedCount * 100) / updatedWeeksBackend.size else 0
-
-                    currentData = RoadmapUiData(
+                    currentData = currentData.copy(
                         roadmapWeeks = updatedWeeksBackend,
-                        completionPercentage = percentage
+                        completionPercentage = calculateOverallPercentage(updatedWeeksBackend)
                     )
                     setSuccess(currentData)
                 }
                 .onFailure { error ->
+                    // Revert to backend state on failure
+                    val freshWeeks = roadmapRepository.getWeeklyRoadmap()
+                    currentData = currentData.copy(
+                        roadmapWeeks = freshWeeks,
+                        completionPercentage = calculateOverallPercentage(freshWeeks)
+                    )
                     setSuccess(currentData)
-                    viewModelScope.launch {
-                        _errorFlow.emit(error.message ?: "Unable to update task. Please try again.")
-                    }
+                    _errorFlow.emit(error.message ?: "Unable to update task. Please try again.")
+                }
+        }
+    }
+
+    fun toggleModuleCompleted(weekNumber: Int, completed: Boolean) {
+        // Optimistic local update
+        val updatedWeeksOptimistic = currentData.roadmapWeeks.map { week ->
+            if (week.weekNumber == weekNumber) {
+                val updatedTasks = week.tasks.map { it.copy(completed = completed, status = if (completed) "COMPLETED" else "PENDING") }
+                week.copy(completed = completed, tasks = updatedTasks)
+            } else {
+                week
+            }
+        }
+
+        currentData = currentData.copy(
+            roadmapWeeks = updatedWeeksOptimistic,
+            completionPercentage = calculateOverallPercentage(updatedWeeksOptimistic)
+        )
+        setSuccess(currentData)
+
+        viewModelScope.launch {
+            roadmapRepository.toggleWeekCompletion(weekNumber, completed)
+                .onSuccess { updatedWeeksBackend ->
+                    currentData = currentData.copy(
+                        roadmapWeeks = updatedWeeksBackend,
+                        completionPercentage = calculateOverallPercentage(updatedWeeksBackend)
+                    )
+                    setSuccess(currentData)
+                }
+                .onFailure { error ->
+                    val freshWeeks = roadmapRepository.getWeeklyRoadmap()
+                    currentData = currentData.copy(
+                        roadmapWeeks = freshWeeks,
+                        completionPercentage = calculateOverallPercentage(freshWeeks)
+                    )
+                    setSuccess(currentData)
+                    _errorFlow.emit(error.message ?: "Unable to update module. Please try again.")
                 }
         }
     }

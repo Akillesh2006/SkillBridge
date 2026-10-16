@@ -103,21 +103,12 @@ class JobSelectionViewModel @Inject constructor(
 
     fun saveTargetJobSelection() {
         viewModelScope.launch {
+            val start = System.currentTimeMillis()
             setLoading()
             jobRepository.saveTargetJob(currentData.selectedJobTitle, currentData.selectedCompany)
                 .onSuccess {
-                    // Sync with profile
-                    val profile = profileRepository.getUserProfile()
-                    profileRepository.updateUserProfile(
-                        profile.copy(
-                            targetJob = currentData.selectedJobTitle,
-                            targetCompany = currentData.selectedCompany
-                        )
-                    )
-
-                    // Dynamically generate new role-specific roadmap in backend
-                    roadmapRepository.generateRoadmap(currentData.selectedJobTitle)
-
+                    val duration = System.currentTimeMillis() - start
+                    android.util.Log.d("SkillBridgePerf", "[PERF] TargetJob update = $duration ms")
                     currentData = currentData.copy(
                         isSavedSuccessfully = true,
                         initialJobTitle = currentData.selectedJobTitle,

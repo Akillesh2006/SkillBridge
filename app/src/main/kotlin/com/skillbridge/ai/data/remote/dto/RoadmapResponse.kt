@@ -4,10 +4,10 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class RoadmapResponse(
-    val id: Long,
-    val roleName: String,
-    val matchPercentage: Double,
-    val readinessScore: Double,
-    val createdAt: String,
-    val tasks: List<RoadmapTaskResponse>
+    val id: Long? = 1L,
+    val roleName: String? = "Software Developer",
+    val matchPercentage: Double? = 0.0,
+    val readinessScore: Double? = 0.0,
+    val createdAt: String? = null,
+    val tasks: List<RoadmapTaskResponse> = emptyList()
 )
