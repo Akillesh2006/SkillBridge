@@ -1,257 +1,209 @@
----
-title: SkillBridge
-emoji: 🚀
-colorFrom: indigo
-colorTo: purple
-sdk: docker
-app_port: 3000
-pinned: true
----
+# 🚀 SkillBridge AI — Autonomous Career Roadmap & Skill Acceleration Platform
 
 <div align="center">
 
-# SkillBridge
+[![Android](https://img.shields.io/badge/Platform-Native_Android-3DDC84?style=for-the-badge&logo=android&logoColor=white)](app/)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.0.21-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)](app/)
+[![Jetpack Compose](https://img.shields.io/badge/UI-Jetpack_Compose-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white)](app/)
+[![Backend](https://img.shields.io/badge/Backend-Java_21_Spring_Boot_3-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)](Backend/skillbridge-backend/)
+[![AI Engine](https://img.shields.io/badge/AI-Google_Gemini_2.5_Flash-4285F4?style=for-the-badge&logo=google&logoColor=white)](Backend/skillbridge-backend/)
+[![Database](https://img.shields.io/badge/Database-MySQL_8.x-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](Backend/skillbridge-backend/)
 
-### An AI-powered career roadmap & skill acceleration platform that analyzes resumes, detects ATS skill gaps, generates dynamic career pathways, and conducts interactive AI mock interviews — in seconds.
+**An end-to-end, AI-powered career roadmap and skill acceleration ecosystem.**  
+*Native Android Mobile Client + Java Spring Boot 3 Microservices Backend + Google Gemini AI.*
 
-[![Live Demo on Vercel](https://img.shields.io/badge/%F0%9F%9A%80%20Live%20Demo-Vercel%20Web%20App-6366f1?style=for-the-badge&logo=vercel&logoColor=white)](https://skillbridge-app.vercel.app)
-[![Vercel Projects](https://img.shields.io/badge/Vercel-akillesh2006s--projects-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://vercel.com/akillesh2006s-projects)
-[![Render Docker API](https://img.shields.io/badge/%E2%9A%A1%20Backend-Render%20Docker-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://render.com)
-
-[![React](https://img.shields.io/badge/React-18.2-61DAFB?style=flat-square&logo=react&logoColor=black)](https://reactjs.org)
-[![Vite](https://img.shields.io/badge/Vite-5.1-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev)
-[![Java 17](https://img.shields.io/badge/Java-17-ED8B00?style=flat-square&logo=openjdk&logoColor=white)](https://www.oracle.com/java/)
-[![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.x-6DB33F?style=flat-square&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
-[![Android](https://img.shields.io/badge/Android-Kotlin%20%2B%20Compose-3DDC84?style=flat-square&logo=android&logoColor=white)](https://developer.android.com)
-[![Docker](https://img.shields.io/badge/Docker-Multi--Stage-2496ED?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com/)
-[![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](./LICENSE)
+[📱 Native Android App](#-native-android-application-primary) • [⚡ Spring Boot Backend](#-spring-boot-backend-service) • [🌐 Web Companion](#-web-frontend-companion) • [🏗️ Architecture](#️-system-architecture) • [🚀 Quick Start](#-quick-start--setup)
 
 </div>
 
 ---
 
-> ## 🚀 Quick Links & Live Demonstrations
->
-> - **🌐 Live Web App (Vercel)**: [https://skillbridge-app.vercel.app](https://skillbridge-app.vercel.app)
-> - **☁️ Vercel Projects Dashboard**: [https://vercel.com/akillesh2006s-projects](https://vercel.com/akillesh2006s-projects)
-> - **📦 GitHub Repository**: [https://github.com/Akillesh2006/SkillBridge](https://github.com/Akillesh2006/SkillBridge)
+## 📌 Project Overview & Structure
 
----
+SkillBridge AI is fundamentally a **Native Android Mobile Application** designed to empower developers and students to bridge the gap between academic learning and industry job expectations.
 
-## 🎯 The problem
+### Preferred Logical Organization
 
-Millions of aspiring developers, engineers, and career switchers struggle to land tech roles due to unoptimized resumes, hidden ATS (Applicant Tracking System) rejections, and unclear learning pathways. 
-
-- **ATS Rejection Loop**: Resumes fail initial automated screeners due to missing target keywords and metrics.
-- **Fragmented Roadmaps**: Self-learners spend hours hunting for structured, role-specific learning steps.
-- **Lack of Realistic Practice**: Candidates enter technical interviews without actionable feedback on system design or coding concepts.
-
-**SkillBridge** solves this with an end-to-end AI acceleration platform combining automated resume parsing, ATS scoring, dynamic career roadmap generation, competency quizzes, and an AI mock interview copilot.
-
----
-
-## ✨ What makes it different
-
-Key architectural innovations built into SkillBridge:
-
-| | Innovation | Why it matters |
-|---|---|---|
-| 📄 | **Graph & PDF Keyword Extractor** — Apache PDFBox + LLM parsing | Extracts verified technical skills directly from resumes and compares them against target job profile requirements with zero manual input. |
-| 🗺️ | **Dynamic Milestone Roadmap Visualizer** | Transforms target job roles (*Full Stack, Android, AI/ML, Cloud Architect*) into multi-phase milestone paths with real-time percentage tracking. |
-| 🎯 | **Competency Assessment Engine** | Interactive technical quizzes that score system architecture readiness and provide immediate explanatory feedback. |
-| 🤖 | **AI Mock Interview Copilot** | Conversational technical assistant that conducts realistic interview simulations, reviews architecture choices, and offers ATS resume optimization tips. |
-
----
-
-## 🏗️ Architecture
-
-```mermaid
-flowchart TD
-    User([👤 Candidate / Student])
-    
-    subgraph Clients ["Client Interfaces"]
-        WebApp[🌐 SkillBridge Web App<br/><i>React 18 · Vite · HSL Glassmorphism</i><br/><b>Deployed on Vercel Cloud</b>]
-        AndroidApp[📱 Native Android App<br/><i>Kotlin · Jetpack Compose · Hilt · Room</i>]
-    end
-
-    User -->|web browser| WebApp
-    User -->|mobile device| AndroidApp
-
-    subgraph BackendAPI ["Java Backend Microservice"]
-        direction TB
-        BootAPI[⚡ Spring Boot 3 REST API<br/><b>Docker Container on Render/Railway</b>]
-        PDFEngine[📄 Apache PDFBox Parser<br/><i>Document text extraction</i>]
-        SkillGapEngine[🎯 Skill Gap Matcher<br/><i>Target role keyword comparator</i>]
-        RoadmapEngine[🗺️ Dynamic Roadmap Builder<br/><i>Milestone sequencing engine</i>]
-        AICopilot[🤖 AI Interview Copilot<br/><i>Prompt & conversational agent</i>]
-    end
-
-    WebApp -->|REST HTTP / JSON| BootAPI
-    AndroidApp -->|Retrofit / REST| BootAPI
-
-    BootAPI --> PDFEngine
-    BootAPI --> SkillGapEngine
-    BootAPI --> RoadmapEngine
-    BootAPI --> AICopilot
-
-    subgraph DataStore ["Data & Storage Layer"]
-        Database[(SQL Database<br/>Users · Resumes · Tasks)]
-        Uploads[📁 Secure File Storage]
-    end
-
-    BootAPI --> Database
-    BootAPI --> Uploads
-
-    classDef client fill:#6366f1,stroke:#4f46e5,color:#fff,stroke-width:2px
-    classDef backend fill:#10b981,stroke:#059669,color:#fff
-    classDef data fill:#f59e0b,stroke:#d97706,color:#fff
-    class WebApp,AndroidApp client
-    class BootAPI,PDFEngine,SkillGapEngine,RoadmapEngine,AICopilot backend
-    class Database,Uploads data
+```
+SkillBridge/
+├── app/                       # [PRIMARY] Native Android App (Kotlin + Jetpack Compose)
+├── Backend/
+│   └── skillbridge-backend/   # Java 21 / Spring Boot 3 REST API & MySQL Backend
+├── web/                       # Separate Vite + React Web Demo (Deployed on Vercel)
+├── gradle/                    # Gradle Wrapper and Version Catalog (libs.versions.toml)
+├── build.gradle.kts           # Root Android Gradle Build File
+├── settings.gradle.kts        # Root Gradle Settings (Module :app)
+├── local.properties           # Local Android SDK configuration
+├── vercel.json                # Vercel Deployment for /web
+├── render.yaml                # Render Cloud Deployment for Spring Boot Docker Backend
+└── README.md                  # Project Documentation
 ```
 
 ---
 
-## 🔁 User & Execution Sequence
+## 📱 Native Android Application (Primary)
 
-Trace of a candidate preparing for a **Full Stack Java + React Engineer** position:
+The native Android app is the primary production interface for SkillBridge AI. It delivers a fluid, dark-mode glassmorphic user experience powered by **Kotlin 2.0** and **Jetpack Compose**.
+
+### Key Mobile Capabilities
+1. **📄 ATS Resume Scanner**: Select PDF resumes directly from Google Drive, Downloads, or Local Files with background chunk streaming, extracting verified skills and calculating real-time ATS match scores.
+2. **🗺️ Interactive Weekly Learning Roadmap**: Dynamic, milestone-driven curriculum tailored to candidate target roles (Android, Java Backend, Full Stack, Data Science, AI/ML, DevOps). Includes task checkboxes, module completion toggles, and direct learning resource links.
+3. **🚀 AI Career Project Mission Simulator**: Real-world workplace scenario simulator placing candidates in simulated production incidents and software engineering challenges evaluated by an AI Hiring Manager.
+4. **🎯 Real-Time Skill Gap Radar**: Instant visual comparison between user extracted competencies and industry target job profiles.
+5. **⚡ Daily Problem Challenges**: Daily technical challenges with automated AI grading and immediate actionable feedback.
+6. **🤖 AI Mock Interview Copilot**: Realistic, multi-turn technical interview simulator evaluating system architecture, data structures, and algorithmic choices.
+7. **📊 Career Readiness Analytics**: In-depth readiness scoring, progress analytics, and candidate diagnostic reports.
+8. **🔔 Background WorkManager Notifications**: Periodic notification worker checking for daily milestones and missed challenges.
+
+### Android Architecture & Tech Stack
+- **Language**: Kotlin 2.0.21
+- **UI Framework**: Jetpack Compose + Material 3 (BOM 2024.12.01)
+- **Architecture**: MVVM Clean Architecture with `UiState<T>` Unidirectional Data Flow
+- **Dependency Injection**: Dagger Hilt 2.52
+- **Networking**: Retrofit 2.11.0 + OkHttp 4.12.0 + Kotlinx Serialization
+- **Local Persistence**: Jetpack DataStore Preferences + Room 2.6.1 SQLite
+- **Background Tasks**: AndroidX WorkManager 2.9.0
+
+---
+
+## ⚡ Spring Boot Backend Service
+
+The core intelligence and persistence engine of SkillBridge AI, located in `Backend/skillbridge-backend/`.
+
+### Key Backend Features
+- **Document Text Extraction**: Apache PDFBox 3.0 stream processing for resume PDFs.
+- **Google Gemini AI Integration**: Direct integration via `com.google.genai` (`gemini-2.5-flash`) for resume parsing, roadmap generation, daily challenges, and career missions.
+- **Stateless Authentication**: Spring Security 6 with JJWT Bearer tokens.
+- **MySQL 8 Database**: 13 JPA entities modeling users, resumes, roadmaps, tasks, career missions, and interview assessments.
+- **Multi-Stage Docker Packaging**: Lightweight production Alpine container (`eclipse-temurin:21-jre-alpine`).
+
+---
+
+## 🌐 Web Frontend Companion
+
+A standalone web application built with **React 18 + Vite** located in `/web`.
+- Maintained as an independent web companion / interactive demo.
+- Deployed on Vercel Cloud at `https://skillbridge-app.vercel.app`.
+- Runs independently without interfering with the native Android Gradle project.
+
+---
+
+## 🏗️ System Architecture
+
+```mermaid
+flowchart TD
+    User([👤 Candidate / Developer])
+    
+    subgraph PrimaryClient ["Primary Mobile Application"]
+        AndroidApp["📱 SkillBridge Android App<br/><b>Kotlin · Jetpack Compose · Hilt · Room</b><br/><i>(app/)</i>"]
+    end
+
+    subgraph WebCompanion ["Web Demo Companion"]
+        WebApp["🌐 SkillBridge Web Companion<br/><b>React 18 · Vite · Vercel</b><br/><i>(web/)</i>"]
+    end
+
+    User -->|Daily mobile workflow| AndroidApp
+    User -.->|Web preview| WebApp
+
+    subgraph BackendAPI ["Spring Boot 3 REST Backend (Backend/skillbridge-backend)"]
+        direction TB
+        BootAPI["⚡ Spring Boot REST Controllers<br/><i>Auth · Profile · Roadmap · Missions</i>"]
+        PDFEngine["📄 Apache PDFBox Engine<br/><i>Stream document parsing</i>"]
+        GeminiService["🤖 Google Gemini 2.5 Flash Engine<br/><i>ATS Scoring · Mission Grading · Roadmap Builder</i>"]
+    end
+
+    AndroidApp -->|Retrofit 2 / REST + JWT| BootAPI
+    WebApp -.->|REST / JSON| BootAPI
+
+    BootAPI --> PDFEngine
+    BootAPI --> GeminiService
+
+    subgraph Storage ["Persistence Layer"]
+        MySQL[("🗄️ MySQL 8.x Database<br/>Users · Skills · Roadmaps · Missions")]
+        Uploads["📁 Secure File Storage"]
+    end
+
+    BootAPI --> MySQL
+    BootAPI --> Uploads
+```
+
+---
+
+## 🔁 Complete Application Execution Flow
 
 ```mermaid
 sequenceDiagram
     autonumber
-    participant U as Candidate / User
-    participant W as Web App (Vercel)
-    participant B as Spring Boot API (Render)
-    participant PDF as Apache PDFBox Engine
-    participant LLM as AI Copilot Agent
+    participant App as 📱 Android App (Compose)
+    participant API as ⚡ Spring Boot API
+    participant DB as 🗄️ MySQL Database
+    participant AI as 🤖 Google Gemini AI
 
-    U->>W: Upload / Paste Resume Content
-    W->>B: POST /api/resume/upload
-    B->>PDF: Extract text & parse skill tokens
-    PDF-->>B: Extracted Skills (Java, Spring, Docker, Git...)
-    B->>B: Compute ATS Match % against Target Job Role
-    B-->>W: ATS Score (86%) + Missing Keywords (GraphQL, Redis, System Design)
+    App->>API: POST /api/auth/login
+    API->>DB: Verify credentials
+    API-->>App: JWT Bearer Token (Stored in DataStore)
 
-    U->>W: Request AI Career Roadmap
-    W->>B: GET /api/roadmap?role=FullStack
-    B-->>W: Multi-Phase Milestones (Foundations -> Containerization -> System Design)
+    App->>API: POST /api/resume/upload (Multipart PDF)
+    API->>API: Apache PDFBox extracts raw text
+    API->>AI: Send prompt with resume text to Gemini 2.5 Flash
+    AI-->>API: Extracted Skills JSON, ATS Score, Strengths & Gaps
+    API->>DB: Save Resume & UserSkills
+    API-->>App: ResumeAnalysisResponse (ATS Score, Skills)
 
-    U->>W: Click Step Checkboxes
-    W->>W: Update Progress Bar Real-Time (60%)
+    App->>API: POST /api/roadmap/generate?roleName=Android Developer
+    API->>AI: Generate role-specific milestone tasks
+    AI-->>API: 5-Phase Structured Roadmap JSON
+    API->>DB: Persist Roadmap & RoadmapTasks
+    API-->>App: RoadmapResponse with Weekly Tasks
 
-    U->>W: Launch AI Mock Interview Copilot
-    W->>LLM: Send Technical Question / Answer
-    LLM-->>W: Immediate Architectural & System Design Feedback
+    App->>API: GET /api/career-mission
+    API->>AI: Generate production workplace scenario
+    AI-->>API: Mission scenario & requirements
+    API-->>App: CareerMissionDto
+
+    App->>API: POST /api/career-mission/submit (Solution code)
+    API->>AI: AI Hiring Manager evaluation
+    AI-->>API: Evaluation breakdown & score (0-100)
+    API->>DB: Save mission result
+    API-->>App: Mission evaluation results & score
 ```
 
 ---
 
-## 💻 Tech Stack Overview
+## 🚀 Quick Start & Setup
 
-### 1. Web Application (`/web`)
-- **Framework**: React 18 with Vite 5
-- **Styling**: Custom Glassmorphism UI Design System with HSL tailwinds & Outfit/Inter typography
-- **Icons & Visuals**: Lucide Icons & Responsive Grid layout
-- **Deployment**: **Vercel Cloud** (`vercel.json` SPA build configuration)
+### 1. Build and Run the Android Application (Primary)
+Open the root directory `SkillBridge` in **Android Studio Ladybug / Meerkat** (or higher).
 
-### 2. Backend API (`/Backend/skillbridge-backend`)
-- **Framework**: Java 17 with Spring Boot 3.x
-- **Parsing**: Apache PDFBox for PDF resume document extraction
-- **Security & Auth**: Spring Security with JWT (JSON Web Tokens)
-- **Containerization**: Multi-stage `Dockerfile` ready for Render / Railway / Fly.io
+**Build via Gradle:**
+```powershell
+# In PowerShell:
+$env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"
+$env:PATH = "$env:JAVA_HOME\bin;$env:PATH"
 
-### 3. Native Android App (`/app`)
-- **Language & Framework**: Kotlin with Jetpack Compose
-- **Architecture**: MVVM Clean Architecture
-- **Dependency Injection**: Dagger Hilt
-- **Networking**: Retrofit 2 + OkHttp 3
+.\gradlew.bat assembleDebug
+```
+The compiled APK will be generated at:
+`app/build/outputs/apk/debug/app-debug.apk`
 
----
+### 2. Run the Spring Boot Backend
+Ensure MySQL is running with database `skillbridge_db`.
+```powershell
+cd Backend/skillbridge-backend
+.\mvnw.cmd spring-boot:run
+```
+Backend runs at `http://localhost:8080/`.
 
-## 🛠️ Quick Start & Local Setup
-
-### Prerequisites
-- **Node.js** v18+ and `npm`
-- **JDK 17+** and Maven
-- **Android Studio** (for mobile app compilation)
-
-### 1. Run Web Application (Vite / React)
+### 3. Run the Web Companion
 ```bash
-# Navigate to web directory
 cd web
-
-# Install dependencies
 npm install
-
-# Start development server
 npm run dev
-# 🚀 Web app running at http://localhost:3000
 ```
-
-### 2. Run Java Spring Boot Backend
-```bash
-# Navigate to backend directory
-cd Backend/skillbridge-backend
-
-# Build & run Spring Boot application
-./mvnw spring-boot:run
-# ⚡ REST API active at http://localhost:8080
-```
-
-### 3. Run with Docker
-```bash
-cd Backend/skillbridge-backend
-docker build -t skillbridge-backend .
-docker run -p 8080:8080 skillbridge-backend
-```
+Web app runs at `http://localhost:3000/`.
 
 ---
 
-## ⚡ 1-Click Cloud Deployment
-
-### Deploy Web App to Vercel
-Click the button below to deploy your own instance of SkillBridge to Vercel:
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FAkillesh2006%2FSkillBridge)
-
-Or import this repository directly in your [Vercel Dashboard](https://vercel.com/akillesh2006s-projects):
-1. Go to [https://vercel.com/new](https://vercel.com/new).
-2. Connect your GitHub repository **`Akillesh2006/SkillBridge`**.
-3. Vercel automatically detects `vercel.json` and builds the `/web` frontend!
-
-### Deploy Backend to Render
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Akillesh2006/SkillBridge)
-
----
-
-## 📁 Repository Structure
-
-```
-SkillBridge/
-├── README.md                      # Primary GitHub README (CivicMesh inspired layout)
-├── vercel.json                    # Root Vercel cloud deployment routing
-├── render.yaml                    # Render 1-click Docker backend deployment
-├── web/                           # SkillBridge Web Application (Vite/React)
-│   ├── index.html
-│   ├── package.json
-│   ├── vite.config.js
-│   ├── vercel.json
-│   └── src/
-│       ├── App.jsx                # Feature-complete SkillBridge web dashboard
-│       ├── main.jsx
-│       └── index.css              # Custom Glassmorphism design system
-├── Backend/                       # Java 17 Spring Boot Backend API
-│   └── skillbridge-backend/
-│       ├── Dockerfile
-│       ├── pom.xml
-│       └── src/main/java/com/skillbridge/
-└── app/                           # Native Android Application (Kotlin)
-    ├── build.gradle.kts
-    └── src/main/
-```
-
----
-
-## 📄 License
-
-Created by **[Akillesh K P](https://github.com/Akillesh2006)**. Distributed under the **MIT License**.
+## 📄 License & Credits
+Developed by **Akillesh K P** ([@Akillesh2006](https://github.com/Akillesh2006)).  
+Distributed under the MIT License.
