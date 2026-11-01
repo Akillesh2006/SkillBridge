@@ -183,6 +183,6 @@ To eliminate the confusion between the native Android app and the web companion:
 1. **Live Device / Emulator Launch**:
    - `adb devices` confirmed no physical phone or emulator was running during the audit. When an emulator or phone is connected, the app can be launched immediately via Android Studio or `adb install app/build/outputs/apk/debug/app-debug.apk`.
 2. **Local MySQL Connection**:
-   - For backend execution, verify your local MySQL server is started and password matches `application.properties` (`Akni@2006` or set via `MYSQLPASSWORD` env var).
+   - For backend execution, verify your local MySQL server is started and configured with your local MySQL credentials (set via `MYSQLPASSWORD` env var or local application properties).
 3. **Merging Recovery Branch**:
    - The recovery branch `recovery/original-android-app` is fully ready for review. Once approved, it can be committed and merged into `main`.

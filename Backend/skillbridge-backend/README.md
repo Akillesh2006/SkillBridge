@@ -80,11 +80,11 @@ Key parameters in `src/main/resources/application.properties`:
 | Variable | Description | Default Value |
 |---|---|---|
 | `PORT` | HTTP Server Port | `8080` |
-| `SPRING_DATASOURCE_URL` | MySQL JDBC URL | `jdbc:mysql://localhost:3306/skillbridge_db?...` |
-| `SPRING_DATASOURCE_USERNAME` | Database Username | `root` |
-| `SPRING_DATASOURCE_PASSWORD` | Database Password | `${MYSQLPASSWORD:Akni@2006}` |
-| `GEMINI_API_KEY` | Google Gemini API Key | Server-side only (Set via environment variable) |
-| `JWT_SECRET` | Secret key for signing JWTs | `${JWT_SECRET:...}` |
+| `SPRING_DATASOURCE_URL` | MySQL JDBC URL | `jdbc:mysql://${MYSQLHOST:localhost}:${MYSQLPORT:3306}/${MYSQLDATABASE:skillbridge_db}?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC` |
+| `SPRING_DATASOURCE_USERNAME` | Database Username | `${SPRING_DATASOURCE_USERNAME:${MYSQLUSER:root}}` |
+| `SPRING_DATASOURCE_PASSWORD` | Database Password | `${SPRING_DATASOURCE_PASSWORD:${MYSQLPASSWORD:<your_db_password>}}` |
+| `GEMINI_API_KEY` | Google Gemini API Key | Server-side only (Set via environment variable `GEMINI_API_KEY`) |
+| `JWT_SECRET` | Secret key for signing JWTs | `${JWT_SECRET:<your_jwt_secret_key>}` |
 | `FILE_UPLOAD_DIR` | Directory for uploaded resumes | `uploads` |
 
 ---
